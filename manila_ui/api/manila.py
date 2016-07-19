@@ -26,12 +26,13 @@ from manilaclient import client as manila_client
 import six
 
 from horizon import exceptions
+from horizon.utils.memoized import memoized  # noqa
 from openstack_dashboard.api import base
 
 LOG = logging.getLogger(__name__)
 
 MANILA_UI_USER_AGENT_REPR = "manila_ui_plugin_for_horizon"
-MANILA_VERSION = "2.15"  # requires manilaclient 1.8.0 or newer
+MANILA_VERSION = "2.21"  # requires manilaclient 1.10.0 or newer
 MANILA_SERVICE_TYPE = "sharev2"
 
 # API static values
@@ -133,6 +134,30 @@ def share_manage(request, service_host, protocol, export_path,
         description=description,
         is_public=is_public,
     )
+
+
+def migration_start(request, share, dest_host, skip_optimized_migration,
+                    writable, preserve_metadata, new_share_network_id):
+    return manilaclient(request).shares.migration_start(
+        share,
+        host=dest_host,
+        skip_optimized_migration=skip_optimized_migration,
+        writable=writable,
+        preserve_metadata=preserve_metadata,
+        new_share_network_id=new_share_network_id,
+    )
+
+
+def migration_complete(request, share):
+    return manilaclient(request).shares.migration_complete(share)
+
+
+def migration_get_progress(request, share):
+    return manilaclient(request).shares.migration_get_progress(share)
+
+
+def migration_cancel(request, share):
+    return manilaclient(request).shares.migration_cancel(share)
 
 
 def share_unmanage(request, share):
@@ -354,3 +379,9 @@ def share_instance_list(request):
 
 def share_instance_get(request, share_instance_id):
     return manilaclient(request).share_instances.get(share_instance_id)
+
+
+@memoized
+def is_migration_enabled():
+    manila_config = getattr(settings, 'OPENSTACK_MANILA_FEATURES', {})
+    return manila_config.get('enable_migration', True)

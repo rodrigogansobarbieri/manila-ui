@@ -12,6 +12,7 @@
 
 from django.conf.urls import url  # noqa
 
+from manila_ui.api import manila
 from manila_ui.dashboards.admin.shares import views
 
 urlpatterns = [
@@ -48,3 +49,17 @@ urlpatterns = [
     url(r'^unmanage/(?P<share_id>[^/]+)$', views.UnmanageShareView.as_view(),
         name='unmanage'),
 ]
+
+
+if manila.is_migration_enabled():
+    urlpatterns.extend([
+        url(r'^migration_start/(?P<share_id>[^/]+)$',
+            views.MigrationStartView.as_view(), name='migration_start'),
+        url(r'^migration_complete/(?P<share_id>[^/]+)$',
+            views.MigrationCompleteView.as_view(), name='migration_complete'),
+        url(r'^migration_cancel/(?P<share_id>[^/]+)$',
+            views.MigrationCancelView.as_view(), name='migration_cancel'),
+        url(r'^migration_get_progress/(?P<share_id>[^/]+)$',
+            views.MigrationGetProgressView.as_view(),
+            name='migration_get_progress'),
+    ])

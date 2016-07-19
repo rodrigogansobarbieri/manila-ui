@@ -135,3 +135,34 @@ class ManilaApiTests(base.APITestCase):
         api.share_instance_get(self.request, self.id)
 
         self.manilaclient.share_instances.get.assert_called_once_with(self.id)
+
+    def test_migration_start(self):
+        api.migration_start(self.request, 'fake_share', 'fake_host', False,
+                            True, True, 'fake_net_id')
+
+        self.manilaclient.shares.migration_start.assert_called_once_with(
+            'fake_share',
+            host='fake_host',
+            skip_optimized_migration=False,
+            writable=True,
+            preserve_metadata=True,
+            new_share_network_id='fake_net_id'
+        )
+
+    def test_migration_complete(self):
+        api.migration_complete(self.request, 'fake_share')
+
+        self.manilaclient.shares.migration_complete.assert_called_once_with(
+            'fake_share')
+
+    def test_migration_cancel(self):
+        api.migration_cancel(self.request, 'fake_share')
+
+        self.manilaclient.shares.migration_cancel.assert_called_once_with(
+            'fake_share')
+
+    def test_migration_get_progress(self):
+        api.migration_get_progress(self.request, 'fake_share')
+
+        (self.manilaclient.shares.migration_get_progress.
+            assert_called_once_with('fake_share'))
