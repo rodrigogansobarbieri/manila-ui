@@ -36,6 +36,126 @@ ST_EXTRA_SPECS_FORM_ATTRS = {
 }
 
 
+class MigrationStart(forms.SelfHandlingForm):
+    name = forms.CharField(
+        label=_("Share Name"), required=False,
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    share_id = forms.CharField(
+        label=_("ID"), required=False,
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    host = forms.CharField(
+        max_length=255, label=_("Host to migrate share"), required=True,
+        help_text=_("Destination host where share will be migrated to. Use the"
+                    " format 'host@backend#pool'."))
+    skip_optimized_migration = forms.BooleanField(
+        label=_("Skip Optimized Migration"), required=False, initial=False,
+        help_text=("Defines whether the migration of this share should skip "
+                   "the attempt to be assisted by a storage vendor backend. "
+                   "This will force the use of the Data Service to perform "
+                   "migration."))
+    complete = forms.BooleanField(
+        label=_("Complete migration"), required=False, initial=True,
+        help_text=("Defines whether the migration of this share should be "
+                   "completed immediately (thus being disruptive) or wait for"
+                   "'Share Migration Complete' command to finish before"
+                   "any disruptiveness."))
+    writable = forms.BooleanField(
+        label=_("Writable"), required=False, initial=True,
+        help_text=("Defines whether this share should remain writable during "
+                   "migration. If set so, this will prevent the use of the "
+                   "Data Service for migration."))
+    preserve_metadata = forms.BooleanField(
+        label=_("Preserve Metadata"), required=False, initial=True,
+        help_text=("Defines whether this share should have all its file "
+                   "metadata preserved during migration. If set so, this will "
+                   "prevent the use of the Data Service for migration."))
+    new_share_network_id = forms.CharField(
+        max_length=255, label=_("ID of share network to be set in migrated "
+                                "share"), required=False,
+        help_text=_("Input the ID of the share network where the share should"
+                    "be migrated to."))
+
+    def handle(self, request, data):
+        try:
+            manila.migration_start(
+                request, self.initial['share_id'],
+                skip_optimized_migration=data['skip_optimized_migration'],
+                writable=data['writable'],
+                preserve_metadata=data['preserve_metadata'],
+                complete=data['complete'],
+                dest_host=data['host'],
+                new_share_network_id=data['new_share_network_id'])
+
+            share_name = data.get('name', data.get('id'))
+            messages.success(
+                request,
+                _('Successfully sent the request to migrate share: %s')
+                % share_name)
+            return True
+        except Exception:
+            exceptions.handle(request, _("Unable to migrate share"))
+        return False
+
+
+class MigrationForms(forms.SelfHandlingForm):
+    name = forms.CharField(
+        label=_("Share Name"), required=False,
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    share_id = forms.CharField(
+        label=_("ID"), required=False,
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+
+
+class MigrationComplete(MigrationForms):
+
+    def handle(self, request, data):
+        try:
+            manila.migration_complete(request, self.initial['share_id'])
+            messages.success(
+                request,
+                _('Successfully sent the request to complete migration of '
+                  ' share: %s') % data['name'])
+            return True
+        except Exception:
+            exceptions.handle(request, _("Unable to complete migration "
+                                         "of share."))
+        return False
+
+
+class MigrationGetProgress(MigrationForms):
+
+    def handle(self, request, data):
+        try:
+            result = manila.migration_get_progress(request,
+                                                   self.initial['share_id'])
+            progress = result[1]
+            messages.success(
+                request,
+                _('Migration of share %(name)s is at %(progress)s.') %
+                {'name': data['name'], 'progress': progress['total_progress']})
+            return True
+        except Exception:
+            exceptions.handle(request, _("Unable to obtain progress of "
+                                         "migration of share at this moment."))
+        return False
+
+
+class MigrationCancel(MigrationForms):
+
+    def handle(self, request, data):
+        try:
+            manila.migration_cancel(request, self.initial['share_id'])
+            messages.success(
+                request,
+                _('Successfully sent the request to cancel migration of '
+                  ' share: %s') % data['name'])
+            return True
+        except Exception:
+            exceptions.handle(request, _("Unable to cancel migration of share"
+                                         " at this moment."))
+        return False
+
+
 class ManageShare(forms.SelfHandlingForm):
     name = forms.CharField(
         max_length=255, label=_("Share Name"), required=False,
