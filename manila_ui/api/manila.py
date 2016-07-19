@@ -31,7 +31,7 @@ from openstack_dashboard.api import base
 LOG = logging.getLogger(__name__)
 
 MANILA_UI_USER_AGENT_REPR = "manila_ui_plugin_for_horizon"
-MANILA_VERSION = "2.15"  # requires manilaclient 1.8.0 or newer
+MANILA_VERSION = "2.19"  # requires manilaclient 1.8.0 or newer
 MANILA_SERVICE_TYPE = "sharev2"
 
 # API static values
@@ -133,6 +133,32 @@ def share_manage(request, service_host, protocol, export_path,
         description=description,
         is_public=is_public,
     )
+
+
+def migration_start(request, share, dest_host, skip_optimized_migration,
+                    complete, writable, preserve_metadata,
+                    new_share_network_id):
+    return manilaclient(request).shares.migration_start(
+        share,
+        host=dest_host,
+        skip_optimized_migration=skip_optimized_migration,
+        complete=complete,
+        writable=writable,
+        preserve_metadata=preserve_metadata,
+        new_share_network_id=new_share_network_id,
+    )
+
+
+def migration_complete(request, share):
+    return manilaclient(request).shares.migration_complete(share)
+
+
+def migration_get_progress(request, share):
+    return manilaclient(request).shares.migration_get_progress(share)
+
+
+def migration_cancel(request, share):
+    return manilaclient(request).shares.migration_cancel(share)
 
 
 def share_unmanage(request, share):

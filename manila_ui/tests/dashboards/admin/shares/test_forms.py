@@ -19,6 +19,7 @@ from django import forms as django_forms
 from horizon import forms as horizon_forms
 import mock
 
+from manila_ui.api import manila as api
 from manila_ui.dashboards.admin.shares import forms
 from manila_ui.tests import helpers as base
 
@@ -214,5 +215,69 @@ class ManilaDashboardsAdminSharesCreateShareTypeFormTests(base.APITestCase):
             spec_driver_handles_share_servers='true',
             spec_snapshot_support=True,
             is_public=data["is_public"])
+        mock_horizon_messages_success.assert_called_once_with(
+            self.request, mock.ANY)
+
+
+class ManilaDashboardsAdminMigrationFormTests(base.APITestCase):
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        FAKE_ENVIRON = {'REQUEST_METHOD': 'GET', 'wsgi.input': 'fake_input'}
+        self.request = wsgi.WSGIRequest(FAKE_ENVIRON)
+
+    def _get_initial(self):
+        initial = {'name': 'fake_name', 'share_id': 'fake_id'}
+        kwargs = {
+            'prefix': None,
+            'initial': initial,
+        }
+        return kwargs
+
+    @mock.patch('horizon.messages.success')
+    def test_migration_start(self, mock_horizon_messages_success):
+
+        form = forms.MigrationStart(self.request, **self._get_initial())
+
+        data = {
+            'skip_optimized_migration': False,
+            'writable': True,
+            'preserve_metadata': True,
+            'new_share_network_id': 'fake_net_id',
+            'complete': True,
+            'host': 'fake_host',
+        }
+
+        result = form.handle(self.request, data)
+        self.assertTrue(result)
+        mock_horizon_messages_success.assert_called_once_with(
+            self.request, mock.ANY)
+
+    @mock.patch('horizon.messages.success')
+    def test_migration_complete(self, mock_horizon_messages_success):
+
+        form = forms.MigrationComplete(self.request, **self._get_initial())
+        result = form.handle(self.request, {})
+        self.assertTrue(result)
+        mock_horizon_messages_success.assert_called_once_with(
+            self.request, mock.ANY)
+
+    @mock.patch('horizon.messages.success')
+    def test_migration_cancel(self, mock_horizon_messages_success):
+        form = forms.MigrationCancel(self.request, **self._get_initial())
+        result = form.handle(self.request, {})
+        self.assertTrue(result)
+        mock_horizon_messages_success.assert_called_once_with(
+            self.request, mock.ANY)
+
+    @mock.patch('horizon.messages.success')
+    def test_migration_get_progress(self, mock_horizon_messages_success):
+
+        result = ({'Response': 200}, {'total_progress': 25})
+        self.mock_object(api, 'migration_get_progress',
+                         mock.Mock(return_value=result))
+        form = forms.MigrationGetProgress(self.request, **self._get_initial())
+        result = form.handle(self.request, {})
+        self.assertTrue(result)
         mock_horizon_messages_success.assert_called_once_with(
             self.request, mock.ANY)

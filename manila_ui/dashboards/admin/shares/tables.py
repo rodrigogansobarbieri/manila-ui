@@ -67,6 +67,63 @@ class ManageShareTypeAccess(tables.LinkAction):
         return {"project_id": project_id}
 
 
+class MigrationStartAction(tables.LinkAction):
+    name = "migration_start"
+    verbose_name = _("Migrate Share")
+    url = "horizon:admin:shares:migration_start"
+    classes = ("ajax-modal",)
+    policy_rules = (("share", "share_extension:migration_start"),)
+    ajax = True
+
+    def allowed(self, request, share=None):
+        if share:
+            return (share.status.upper() == "AVAILABLE" and
+                    not getattr(share, 'has_snapshot', False))
+        return False
+
+
+class MigrationCompleteAction(tables.LinkAction):
+    name = "migration_complete"
+    verbose_name = _("Complete migration")
+    url = "horizon:admin:shares:migration_complete"
+    classes = ("ajax-modal",)
+    policy_rules = (("share", "share_extension:migration_complete"),)
+    ajax = True
+
+    def allowed(self, request, share=None):
+        if not share or share.status.upper() != "MIGRATING":
+            return False
+        return True
+
+
+class MigrationCancelAction(tables.LinkAction):
+    name = "migration_cancel"
+    verbose_name = _("Cancel migration")
+    url = "horizon:admin:shares:migration_cancel"
+    classes = ("ajax-modal",)
+    policy_rules = (("share", "share_extension:migration_cancel"),)
+    ajax = True
+
+    def allowed(self, request, share=None):
+        if not share or share.status.upper() != "MIGRATING":
+            return False
+        return True
+
+
+class MigrationGetProgressAction(tables.LinkAction):
+    name = "migration_get_progress"
+    verbose_name = _("Get migration progress")
+    url = "horizon:admin:shares:migration_get_progress"
+    classes = ("ajax-modal",)
+    policy_rules = (("share", "share_extension:migration_get_progress"),)
+    ajax = True
+
+    def allowed(self, request, share=None):
+        if not share or share.status.upper() != "MIGRATING":
+            return False
+        return True
+
+
 class ManageShareAction(tables.LinkAction):
     name = "manage"
     verbose_name = _("Manage Share")
@@ -179,6 +236,10 @@ class SharesTable(shares_tables.SharesTable):
         )
         row_actions = (
             shares_tables.DeleteShare,
+            MigrationStartAction,
+            MigrationCompleteAction,
+            MigrationGetProgressAction,
+            MigrationCancelAction,
             UnmanageShareAction,
         )
         columns = (
