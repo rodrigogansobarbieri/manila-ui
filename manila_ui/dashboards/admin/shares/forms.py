@@ -76,6 +76,7 @@ class MigrationStart(forms.SelfHandlingForm):
                     "be migrated to."))
 
     def handle(self, request, data):
+        share_name = data.get('name', data.get('id'))
         try:
             manila.migration_start(
                 request, self.initial['share_id'],
@@ -86,14 +87,14 @@ class MigrationStart(forms.SelfHandlingForm):
                 dest_host=data['host'],
                 new_share_network_id=data['new_share_network_id'])
 
-            share_name = data.get('name', data.get('id'))
             messages.success(
                 request,
-                _('Successfully sent the request to migrate share: %s')
+                _('Successfully sent the request to migrate share: %s.')
                 % share_name)
             return True
         except Exception:
-            exceptions.handle(request, _("Unable to migrate share"))
+            exceptions.handle(request, _("Unable to migrate share %s.")
+                              % share_name)
         return False
 
 
@@ -109,28 +110,28 @@ class MigrationForms(forms.SelfHandlingForm):
 class MigrationComplete(MigrationForms):
 
     def handle(self, request, data):
+        share_name = data.get('name', data.get('id'))
         try:
             manila.migration_complete(request, self.initial['share_id'])
-            share_name = data.get('name', data.get('id'))
             messages.success(
                 request,
                 _('Successfully sent the request to complete migration of '
-                  ' share: %s') % share_name)
+                  ' share: %s.') % share_name)
             return True
         except Exception:
             exceptions.handle(request, _("Unable to complete migration "
-                                         "of share."))
+                                         "of share %s.") % share_name)
         return False
 
 
 class MigrationGetProgress(MigrationForms):
 
     def handle(self, request, data):
+        share_name = data.get('name', data.get('id'))
         try:
             result = manila.migration_get_progress(request,
                                                    self.initial['share_id'])
             progress = result[1]
-            share_name = data.get('name', data.get('id'))
             messages.success(
                 request,
                 _('Migration of share %(name)s is at %(progress)s percent.') %
@@ -138,24 +139,25 @@ class MigrationGetProgress(MigrationForms):
             return True
         except Exception:
             exceptions.handle(request, _("Unable to obtain progress of "
-                                         "migration of share at this moment."))
+                                         "migration of share %s at this "
+                                         "moment.") % share_name)
         return False
 
 
 class MigrationCancel(MigrationForms):
 
     def handle(self, request, data):
+        share_name = data.get('name', data.get('id'))
         try:
             manila.migration_cancel(request, self.initial['share_id'])
-            share_name = data.get('name', data.get('id'))
             messages.success(
                 request,
                 _('Successfully sent the request to cancel migration of '
-                  ' share: %s') % share_name)
+                  ' share: %s.') % share_name)
             return True
         except Exception:
             exceptions.handle(request, _("Unable to cancel migration of share"
-                                         " at this moment."))
+                                         " %s at this moment.") % share_name)
         return False
 
 

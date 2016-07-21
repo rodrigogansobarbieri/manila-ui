@@ -72,13 +72,14 @@ class MigrationStartAction(tables.LinkAction):
     verbose_name = _("Migrate Share")
     url = "horizon:admin:shares:migration_start"
     classes = ("ajax-modal",)
-    policy_rules = (("share", "share_extension:migration_start"),)
+    policy_rules = (("share", "migration_start"),)
     ajax = True
 
     def allowed(self, request, share=None):
         if share:
             return (share.status.upper() == "AVAILABLE" and
-                    not getattr(share, 'has_snapshot', False))
+                    not getattr(share, 'has_snapshot', False) and
+                    manila.is_migration_enabled())
         return False
 
 
@@ -87,13 +88,14 @@ class MigrationCompleteAction(tables.LinkAction):
     verbose_name = _("Complete migration")
     url = "horizon:admin:shares:migration_complete"
     classes = ("ajax-modal",)
-    policy_rules = (("share", "share_extension:migration_complete"),)
+    policy_rules = (("share", "migration_complete"),)
     ajax = True
 
     def allowed(self, request, share=None):
-        if not share or share.status.upper() != "MIGRATING":
-            return False
-        return True
+        if (share and share.status.upper() == "MIGRATING" and
+                manila.is_migration_enabled()):
+            return True
+        return False
 
 
 class MigrationCancelAction(tables.LinkAction):
@@ -101,13 +103,14 @@ class MigrationCancelAction(tables.LinkAction):
     verbose_name = _("Cancel migration")
     url = "horizon:admin:shares:migration_cancel"
     classes = ("ajax-modal",)
-    policy_rules = (("share", "share_extension:migration_cancel"),)
+    policy_rules = (("share", "migration_cancel"),)
     ajax = True
 
     def allowed(self, request, share=None):
-        if not share or share.status.upper() != "MIGRATING":
-            return False
-        return True
+        if (share and share.status.upper() == "MIGRATING" and
+                manila.is_migration_enabled()):
+            return True
+        return False
 
 
 class MigrationGetProgressAction(tables.LinkAction):
@@ -115,13 +118,14 @@ class MigrationGetProgressAction(tables.LinkAction):
     verbose_name = _("Get migration progress")
     url = "horizon:admin:shares:migration_get_progress"
     classes = ("ajax-modal",)
-    policy_rules = (("share", "share_extension:migration_get_progress"),)
+    policy_rules = (("share", "migration_get_progress"),)
     ajax = True
 
     def allowed(self, request, share=None):
-        if not share or share.status.upper() != "MIGRATING":
-            return False
-        return True
+        if (share and share.status.upper() == "MIGRATING" and
+                manila.is_migration_enabled()):
+            return True
+        return False
 
 
 class ManageShareAction(tables.LinkAction):

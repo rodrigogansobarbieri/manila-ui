@@ -26,12 +26,13 @@ from manilaclient import client as manila_client
 import six
 
 from horizon import exceptions
+from horizon.utils.memoized import memoized  # noqa
 from openstack_dashboard.api import base
 
 LOG = logging.getLogger(__name__)
 
 MANILA_UI_USER_AGENT_REPR = "manila_ui_plugin_for_horizon"
-MANILA_VERSION = "2.19"  # requires manilaclient 1.8.0 or newer
+MANILA_VERSION = "2.19"  # requires manilaclient 1.10.0 or newer
 MANILA_SERVICE_TYPE = "sharev2"
 
 # API static values
@@ -380,3 +381,9 @@ def share_instance_list(request):
 
 def share_instance_get(request, share_instance_id):
     return manilaclient(request).share_instances.get(share_instance_id)
+
+
+@memoized
+def is_migration_enabled():
+    manila_config = getattr(settings, 'OPENSTACK_MANILA_FEATURES', {})
+    return manila_config.get('enable_migration', True)
