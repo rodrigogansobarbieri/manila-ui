@@ -138,7 +138,7 @@ def share_manage(request, service_host, protocol, export_path,
 
 def migration_start(request, share, dest_host, skip_optimized_migration,
                     complete, writable, preserve_metadata,
-                    new_share_network_id):
+                    new_share_network_id, new_share_type_id):
     return manilaclient(request).shares.migration_start(
         share,
         host=dest_host,
@@ -147,6 +147,7 @@ def migration_start(request, share, dest_host, skip_optimized_migration,
         writable=writable,
         preserve_metadata=preserve_metadata,
         new_share_network_id=new_share_network_id,
+        new_share_type_id=new_share_type_id
     )
 
 
