@@ -68,6 +68,11 @@ class MigrationStart(forms.SelfHandlingForm):
                                 "share"), required=False,
         help_text=_("Input the ID of the share network where the share should"
                     " be migrated to."))
+    new_share_type_id = forms.CharField(
+        max_length=255, label=_("ID of share type to be set in migrating "
+                                "share"), required=False,
+        help_text=_("Input the ID of the share type which the migrating share"
+                    " will be set to."))
 
     def handle(self, request, data):
         share_name = _get_id_if_name_empty(data)
@@ -78,7 +83,8 @@ class MigrationStart(forms.SelfHandlingForm):
                 writable=data['writable'],
                 preserve_metadata=data['preserve_metadata'],
                 dest_host=data['host'],
-                new_share_network_id=data['new_share_network_id'])
+                new_share_network_id=data['new_share_network_id'],
+                new_share_type_id=data['new_share_type_id'])
 
             messages.success(
                 request,

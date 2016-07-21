@@ -145,6 +145,7 @@ class SharesTests(test.BaseAdminViewTests):
             'preserve_metadata': True,
             'skip_optimized_migration': True,
             'new_share_network_id': 'fake_net_id',
+            'new_share_type_id': 'fake_type_id',
         }
 
         self.mock_object(
@@ -161,7 +162,8 @@ class SharesTests(test.BaseAdminViewTests):
             skip_optimized_migration=formData['skip_optimized_migration'],
             writable=formData['writable'],
             preserve_metadata=formData['preserve_metadata'],
-            new_share_network_id=formData['new_share_network_id'])
+            new_share_network_id=formData['new_share_network_id'],
+            new_share_type_id=formData['new_share_type_id'])
 
         status_code = 200 if exc else 302
         self.assertEqual(res.status_code, status_code)
