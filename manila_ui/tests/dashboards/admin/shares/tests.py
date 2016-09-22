@@ -145,14 +145,24 @@ class SharesTests(test.BaseAdminViewTests):
             'preserve_metadata': True,
             'force_host_assisted_migration': True,
             'nondisruptive': True,
-            'new_share_network_id': 'fake_net_id',
-            'new_share_type_id': 'fake_type_id',
+            'new_share_network': ('fake_net_id', 'fake_net_name'),
+            'new_share_type': ('fake_type_id', 'fake_type_name'),
         }
 
         self.mock_object(
             api_manila, "share_get", mock.Mock(return_value=share))
         self.mock_object(api_manila, "migration_start", mock.Mock(
             side_effect=exc))
+
+        self.mock_object(
+            api_manila, "share_network_list",
+            mock.Mock(return_value=[test.FakeEntity('sn1_id', 'sn1_name'),
+                                    test.FakeEntity('sn2_id', 'sn2_name')]))
+
+        self.mock_object(
+            api_manila, "share_type_list",
+            mock.Mock(return_value=[test.FakeEntity('st1_id', 'st1_name'),
+                                    test.FakeEntity('st2_id', 'st2_name')]))
 
         res = self.client.post(url, formData)
 
@@ -165,8 +175,8 @@ class SharesTests(test.BaseAdminViewTests):
             writable=formData['writable'],
             preserve_metadata=formData['preserve_metadata'],
             nondisruptive=formData['nondisruptive'],
-            new_share_network_id=formData['new_share_network_id'],
-            new_share_type_id=formData['new_share_type_id'])
+            new_share_network_id=formData['new_share_network'],
+            new_share_type_id=formData['new_share_type'])
 
         status_code = 200 if exc else 302
         self.assertEqual(res.status_code, status_code)
@@ -186,6 +196,16 @@ class SharesTests(test.BaseAdminViewTests):
         self.mock_object(
             api_manila, "share_get", mock.Mock(return_value=share))
         self.mock_object(api_manila, method)
+
+        self.mock_object(
+            api_manila, "share_network_list",
+            mock.Mock(return_value=[test.FakeEntity('sn1_id', 'sn1_name'),
+                                    test.FakeEntity('sn2_id', 'sn2_name')]))
+
+        self.mock_object(
+            api_manila, "share_type_list",
+            mock.Mock(return_value=[test.FakeEntity('st1_id', 'st1_name'),
+                                    test.FakeEntity('st2_id', 'st2_name')]))
 
         res = self.client.get(url)
 
