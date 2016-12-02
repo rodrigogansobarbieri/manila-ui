@@ -148,6 +148,7 @@ class SharesTests(test.BaseAdminViewTests):
             'host': 'fake_host',
             'writable': True,
             'preserve_metadata': True,
+            'preserve_snapshots': True,
             'force_host_assisted_migration': True,
             'nondisruptive': True,
             'new_share_network': 'sn2_id',
@@ -174,6 +175,7 @@ class SharesTests(test.BaseAdminViewTests):
                 formData['force_host_assisted_migration']),
             writable=formData['writable'],
             preserve_metadata=formData['preserve_metadata'],
+            preserve_snapshots=formData['preserve_snapshots'],
             nondisruptive=formData['nondisruptive'],
             new_share_network_id=formData['new_share_network'],
             new_share_type_id=formData['new_share_type'])
